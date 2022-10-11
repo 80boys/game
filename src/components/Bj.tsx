@@ -1,15 +1,19 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useEffect} from "react"
 import { RefObject } from "react"
-import { InitProps } from "../utils/Types"
+import { InitProps, LocalVar } from "../utils/Types"
 import Bimg from "../assets/images/map.png"
 function Bj(props:InitProps){
-    const [canvas, setCanvas] = useState(document.createElement("canvas"))
-    const [ctx] = useState(canvas.getContext("2d"))
-    const [img] = useState(new Image())
-    const [flag, setFlag] = useState(0)
-    const rateSize = {
-        rate : 0
-    }
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    const Var:LocalVar = {
+        rate : 0,
+        onload : false,
+        img : new Image(),
+        init: false,
+        step: 0,
+        maxCount: 0,
+        minCount: 0
+    } 
     const container:RefObject<HTMLDivElement> = React.createRef()
     useEffect(()=>{
         init()
@@ -17,42 +21,58 @@ function Bj(props:InitProps){
     const init = ()=>{
         canvas.width  = props.width
         canvas.height = props.height
-        img.src = Bimg
-        img.onload = ()=>setFlag(1)
-        if ( container != null && container.current != null ) {
-            container.current.append(canvas)
-            console.log("append")
-            rateSize.rate = (img.height / props.height)
-            test(0)
-            setCanvas(canvas)
-        } else {
-            throw new Error("容器不存在!")
+        Var.img.src = Bimg
+        Var.img.onload = ()=>{
+            Var.onload = true
+            Var.step = props.step
+            Var.rate = Number.parseFloat((Var.img.height / props.height).toFixed(2))
+            Var.maxCount = Math.floor(Var.img.width / Var.step)
+            Var.minCount = Math.floor((Var.img.width - props.width * Var.rate) / Var.step)
+            test()
         }
     }
-    const stepSize = 5
-    const test = (step:number)=>{
-        if ( step < 1250 ) {
-            setTimeout(()=>{
-                drawBj(false, step)
-                test(step + stepSize)
-            }, 10) 
+    const test = ( num:number = 0)=>{
+        if ( num > Var.maxCount ) {
+            num = 0 
         }
+        setTimeout(()=>{
+            if ( drawBj(Var.step * num, num ) ) {
+                 test( num+1 ) 
+            } else {
+                test( num ) 
+            }
+        }, 10)
     }
+    const drawBj = ( step:number = 0, num: number, stop:boolean = false): boolean => { 
+        if ( Var.onload === true && stop === false ) {
+            if ( container != null && container.current != null &&
+                Var.init === false ) {
+                Var.init = true
+                container.current.append(canvas)
+            }
+            if ( ctx !== null ) {
+                ctx.drawImage(Var.img, 
+                    step, 0, 
+                    props.width * Var.rate,    Var.img.height, 
 
-    const drawBj = (stop: false, step:number = 0) => { 
-        if ( flag === 1 && stop === false ) {
-            if ( ctx !== null ) { 
-                ctx.drawImage(img, step, 0, props.width * rateSize.rate, img.height, 
-                    0, 0, props.width, props.height ); 
-                if ( (step + props.width) * rateSize.rate > img.width ) {
-                    ctx.clearRect(0, 0, props.width, props.height )
-                    ctx.drawImage(img, 0, 0, (step + props.width) * rateSize.rate - img.width, img.height, 
-                        props.width - ((step + props.width) * rateSize.rate - img.width - stepSize), 0, props.width / rateSize.rate, props.height );  
-                    debugger 
+                    0, 0,
+                    props.width, props.height
+                    ); 
+                if ( num > Var.minCount ) {
+                    ctx.drawImage(Var.img,
+                        0, 0, 
+                        (num - Var.minCount) * Var.step,
+                        Var.img.height,
+                        
+                        props.width - (((num - Var.minCount) * Var.step) / Var.rate), 0,
+                        (num - Var.minCount) * Var.step / Var.rate,
+                        props.height
+                    );
                 }
             }
         }
+        return true
     }
-    return <div ref={container} >{flag}</div> 
+    return <div ref={container} ></div> 
 }
 export default Bj
