@@ -1,7 +1,8 @@
 export type InitProps = {
     step: number,
     width:number,
-    height:number
+    height:number,
+    state: boolean
 }
 export type LocalVar = {
     rate : number,

@@ -4,6 +4,11 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Available Scripts
 
+<button onClick={()=>{
+      setState(state === true ? false : true)
+    }} > 走或者停 </button>
+
+
 In the project directory, you can run:
 
 ### `npm start`
